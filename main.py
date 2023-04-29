@@ -1,6 +1,8 @@
 import os
 import discord
 import openai
+import requests
+import re
 from dotenv import load_dotenv
 
 #Get those secret cheat codes
@@ -29,19 +31,34 @@ async def on_message(message):
   
   # if mention
   if client.user in message.mentions:
- 
-    # OPEN_AI Parameters
-    response = openai.Completion.create(
-    engine="gpt-3.5-turbo",
-    prompt=f"{message.content}",
-    max_tokens=1024,
-    temperature=0.5,
-    )
+    print(message)
+    print(type(message.content))
+
+    # slice the discord chat name away please count the string when printing AItext
+    AIslice = message.content[22:]
+    print(AIslice)
+
+    messages = [
+            {"role": "system", "content": "you are a chatbot full of humor"},
+            {"role": "user", "content": f'{AIslice}'}
+        ]
+
+    response = requests.post(
+            url="https://api.openai.com/v1/chat/completions",
+            
+            json = {
+            "model": "gpt-3.5-turbo",
+            "messages": messages,
+            "temperature": 0.1},
+            headers= {
+                'authorization': f'Bearer {AITOKEN}',
+                'content-type': 'application/json'}
+                )
+    response = response.json()
 
   # Send the response as a message
-  await message.channel.send(response.choices[0].text)
-
-
+  await message.channel.send(response['choices'][0]['message']['content']) 
+ 
 #Go live stupid
 client.run(TOKEN)
 
